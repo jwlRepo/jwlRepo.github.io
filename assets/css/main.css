@@ -2572,6 +2572,10 @@ input, select, textarea {
 			margin: 0;
 		}
 
+		.work-item q {
+			display: none
+		}
+
 /* Header */
 
 	#header {
