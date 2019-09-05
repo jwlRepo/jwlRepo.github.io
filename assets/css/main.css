@@ -2090,12 +2090,12 @@ input, select, textarea {
 			}
 
 			.image.thumb:hover:after {
-				opacity: 1.0;
+				opacity: 0;
 			}
 
 			.image.thumb:hover:before {
 				background: url("images/overlay.png"), url("images/overlay.png");
-				opacity: 1.0;
+				opacity: 0;
 			}
 
 		.image img {
@@ -2554,16 +2554,16 @@ input, select, textarea {
 /* Work Item */
 
 	.work-item {
-		margin: 0 0 2em 0;
+		margin: 0 0 0.5em 0;
 	}
 
 		.work-item .image {
-			margin: 0 0 1.5em 0;
+			margin: 0 0 0.2em 0;
 		}
 
 		.work-item h3 {
 			font-size: 1em;
-			margin: 0 0 0.5em 0;
+			margin: 0 0 0.7em 0;
 		}
 
 		.work-item p {
