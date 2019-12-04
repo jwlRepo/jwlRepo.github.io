@@ -10,6 +10,7 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="assets/css/prism.css"/>
 	</head>
 	<body class="is-preload">
 
@@ -91,7 +92,11 @@
 						</br>
 							<p>3) RSSI - <a href="https://www.sick.com/us/en/glossary/rssi/g/p555555" target="_blank">Relative Signal Strength Index</a></p>
 						</br>
-							<p>4) Soil surface residue - Organic matter present on top of the soil. An example is circled in red in the image below</p>
+							<p>4) Soil surface residue - Organic matter present on top of the soil. An example is circled in red in the image below
+								Two different percentage were caluculated. <b>resPercent</b> represents the residue percentage estimate from a -1.5m to 1.5m scan width on the back of the tillage implement.
+							<b>resPercentFull</b> represents the residue percentage estimate from a -3.5m to 3.5m scan width which is the full width of the tillage implement.
+							</p>
+
 						</article>
 
 						<article class="off-3 col-9 col-12-xsmall work-item">
@@ -111,32 +116,72 @@
 						</br>
 						</article>	
 						
-						<article class="off-3 col-9 col-12-xsmall work-item">
+						<article class="col-12 col-12-xsmall work-item">
 								<p>Tillage implement segments</p>
-								<a href="assets/pics/tillageSegments.jpg" target="_blank" class="image fit thumb"><img src="assets/pics/tillageSegments.jpg" alt=""/></a>
+								<a href="assets/pics/tillageSegments.jpg" target="_blank" class="image top thumb"><img src="assets/pics/tillageSegments.jpg" alt=""/></a>
 						</article>
 						
 						<article class="max work-item">
 							<h3>Data processing</h3>			
-							<p>Data processing was done in MATLAB. Data and exact steps to convert point cloud data into a roughness metric and surface residue percentage will not be provided
-								as there might be proprietary implecations with that. Another note is that currently not all data has been process so there are low resolution in some of the factors measured.
-							    I will however give a brief overview of how metrics were obtained.</br></p>
+							<p>Data processing was done in MATLAB. Data and exact steps to cleant and convert point cloud data into a roughness metric and surface residue percentage will not be discussed
+								here as there is probably enough content there for another presentation. Another note is that currently not all data has been process so there are low resolution in some of 
+								the factors measured. I will however give a brief overview on some of the data wrangling process and how metrics were obtained.</br></p>
 						</br>
+							<p>LiDAR and video data was logged through ethernet packets while tillage settings were logged in CAN data packets. Data packets were stored in a .tdms binary format. Since amount of data logged was very large,
+								I first used MATLAB to pre-processed the data to reduce time required to load files for further analysis.
+								MATLAB scripts were written to first extract all the binary data into .mat files containing all the logged point cloud and CAN data. This .mat file was then further pre-process into another .mat file 
+								containing the cleaned and processed point cloud and only the CAN messages I need for analysis. CAN data extraction was automated to extract only CAN message I specified on a custom .dbc file.
+							</p></br>
+
+							<p>Pre-processed files were used as input into a script to find data segments where factors match a specific combination of factors for 700 continuous lidar scans. For example scripts would look for points in the data
+								where speed was around 5mph, front disk is at a depth of 2in and basket were lifted for 700 consecutive lidar scans. Since each file contains data for only 1 minute of data last 14 seconds(700 scans at 50Hz)
+								of each files were combined with data from the next file. Script calculates the roughness and surface residue percentage of each valid 700 LiDAR scan segment and records it into an excel file.  
+
+							</p></br>
+							<p>
+									Resulting data table can be found <a href="https://github.com/jwlRepo/516x/blob/master/Project/tillageTestSummaryResult.csv">here</a>.
+									</br>
+									Data was then passed into python for data analysis.
+									</p>
+									</br>
+
 							<h5>Roughness</h5>
 							<p>Rougness is quantified by the <a href="https://gisgeography.com/root-mean-square-error-rmse-gis" target="_blank">root mean squared error</a> calculated for 
 								each individual scan. Mean of root mean sqaured error over 700 consecutive scans is then taken to obtain a roughness metric for a specific set of factors.
 							</p>
 						</br>
+						
+						</article>
+
+						<article class="off-3 col-9 col-12-xsmall work-item">
+								<p>Comparison between RMSE values and soil cross-section</p>
+								<a href="assets/pics/RMSE.jpg" target="_blank" class="image fit thumb"><img src="assets/pics/RMSE.jpg" alt=""/></a>
+						</article>
+
+						<article class="max work-item">
 							<h5>Surface Residue</h5>
-							<p>Surface Residue quantified using k-mean clustering from a point cloud data set where both surface residue and soil were present. 
-								A full write up of the clustering process can be found <a href="https://github.com/jwlRepo/516x/tree/master/module3/kmeanResidue" target="_blank">here</a>. 
-						</br>resPercent represents the residue percentage estimate from a -1.5m to 1.5m scan width on the back of the tillage implement.
-						</br>resPercentFull represents the residue percentage estimate from a -3.5m to 3.5m scan width which is the full width of the tillage implement.
-						</br>
-							Resulting data table can be found <a href="https://github.com/jwlRepo/516x/blob/master/Project/tillageTestSummaryResult.csv">here</a>.
-						</br>
-							Data was then passed into python for data analysis.
-							</p>
+							<p>I used a k-mean clustering model with k=2, on RSSI of a few point cloud data set where both surface residue and soil were present to classify points as either residue or soil. 
+								A full write up of the clustering process can be found <a href="https://github.com/jwlRepo/516x/tree/master/module3/kmeanResidue" target="_blank">here</a>. Resulting cluster centroid estimate
+								were then used to get a percentage value on how much of the ground is covered by residue.</p>
+						</article>
+
+						<div class="row">
+							<article class="col-4 col-12-medium work-item">
+								<p>Image of soil</p>
+								<a href="assets/pics/TillageScan_img.JPG" target="_blank" class="image top thumb"><img src="assets/pics/TillageScan_img.JPG" alt=""/></a>
+							</article>
+							<article class="col-4 col-12-medium work-item">
+								<p>LiDAR RSSI heatmap</p>
+								<a href="assets/pics/TillageScan_rssi.jpg" target="_blank" class="image top thumb"><img src="assets/pics/TillageScan_rssi.jpg" alt=""/></a>
+							</article>
+							<article class="col-4 col-12-medium work-item">
+									<p>Residue estimate heatmap</p>
+									<a href="assets/pics/TillageScan_est.jpg" target="_blank" class="image top thumb"><img src="assets/pics/TillageScan_est.jpg" alt=""/></a>
+							</article>
+						</div>
+
+						<article class="max work-item">
+						
 						</br>
 							<h3>Statistical analysis</h3>
 							<p>Full code <a href="https://github.com/jwlRepo/516x/blob/master/Project/tillageModel.ipynb">here</a>.</p>
@@ -146,13 +191,16 @@
 						</br></p>
 						</article>
 
-						<article class="off-3 col-9 col-12-xsmall work-item">
+						<div class="row">
+							<article class="col-6 col-12-medium work-item">
 								<p>Pearson Heatmap</p>
-								<a href="assets/pics/pearsonHeatMap.png" target="_blank" class="image fit thumb"><img src="assets/pics/pearsonHeatMap.png" alt=""/></a>
-						</br>
+								<a href="assets/pics/pearsonHeatMap.png" target="_blank" class="image top thumb"><img src="assets/pics/pearsonHeatMap.png" alt=""/></a>
+							</article>
+							<article class="col-6 col-12-medium work-item">
 								<p>Spearman Heatmap</p>
-								<a href="assets/pics/spearmanHeatMap.png" target="_blank" class="image fit thumb"><img src="assets/pics/spearmanHeatMap.png" alt=""/></a>
-						</article>
+								<a href="assets/pics/spearmanHeatMap.png" target="_blank" class="image top thumb"><img src="assets/pics/spearmanHeatMap.png" alt=""/></a>
+							</article>
+						</div>
 
 						</br>
 						<article class="max work-item">
@@ -206,7 +254,8 @@
 						</br>
 						<p>Linear Regression model provides a simple regression model which serve as a baseline comparison for all the other regression models. Lasso, Ridge Regression
 							and ElasticNet models all use a form of <a href="http://www.chioka.in/differences-between-l1-and-l2-as-loss-function-and-regularization/">loss function and regularization</a>.
-							Lasso uses L1 regularization; Ridge Regression uses L2 regularization while ElasticNet balaces between both L1 and L2 regularization.
+							Lasso uses L1 regularization; Ridge Regression uses L2 regularization while ElasticNet balaces between both L1 and L2 regularization. Should any of the linear regression models 
+							models work out, a linear state model can be build for controls.
 						</p>
 						<p>More information on comparison between Linear, Ridge, Lasso and ElasticNet can be found <a href="https://www.analyticsvidhya.com/blog/2017/06/a-comprehensive-guide-for-linear-ridge-and-lasso-regression/">here</a>.</p>
 						</br><p>SVR with a <a href="https://en.wikipedia.org/wiki/Radial_basis_function">rbf(radial basis function)</a> kernel provides a <a href="https://scikit-learn.org/stable/auto_examples/svm/plot_svm_regression.html">non-linear model</a> for the comparison.</p></br>
@@ -214,29 +263,95 @@
 								Factors were scaled so resulting coefficients for each factors were comparable.</p>
 						</article>
 
-						<article class="off-3 col-9 col-12-xsmall work-item">
-								<a href="assets/pics/trainNScale.JPG" target="_blank" class="image fit thumb"><img src="assets/pics/trainNScale.JPG" alt=""/></a>
-						</article>
+<article class="col-12 col-12-xsmall work-item">
+<pre><code class="language-python">
+# Split dataset into Training set and Test set
+X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.5,random_state=5)
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+</code></pre>
+</article>
 
 						<article class="max work-item">
 								<p>A function was written to take in data frame of factors and result to easily automate training and testing of all 5 models for different X and Y values. Models were use 
 								to predict Y values of test data and model results were compare with RMSE and R2 metrics.</p></br>  
 						</article>
-
-						<article class="off-3 col-9 col-12-xsmall work-item">
-								<a href="assets/pics/modelFunction.JPG" target="_blank" class="image fit thumb"><img src="assets/pics/modelFunction.JPG" alt=""/></a>
-						</article>
+						
+<article class="col-12 col-12-xsmall work-item">
+<p><b>Function:</b></p>
+<pre><code class="language-python">
+def genModels(X,Y):
+    
+	# Split dataset into Training set and Test set
+	X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.5,random_state=5)
+	sc = StandardScaler()
+	X_train = sc.fit_transform(X_train)
+	X_test = sc.transform(X_test)
+	
+	# ElasticNet model
+	eNet=ElasticNet(random_state=0)
+	eNet.fit(X_train,Y_train)
+	YNet_pred = eNet.predict(X_test)
+	r_2=metrics.r2_score(Y_test,YNet_pred)
+	rmse = (np.sqrt(metrics.mean_squared_error(Y_test, YNet_pred)))
+	print(f'Enet\t- RMSE: {rmse:.3f}, R^2: {r_2:.3f}, coef: {eNet.coef_}')
+	
+	# Lasso Model
+	las = Lasso(alpha=1)
+	las.fit(X_train,Y_train)
+	Ylas_pred = las.predict(X_test)
+	r_2=metrics.r2_score(Y_test,Ylas_pred)
+	rmse = (np.sqrt(metrics.mean_squared_error(Y_test, Ylas_pred)))
+	print(f'Lasso\t- RMSE: {rmse:.3f}, R^2: {r_2:.3f}, coef: {las.coef_}')
+	
+	# Ridge model
+	ridge = Ridge(alpha=0.1)
+	ridge.fit(X_train,Y_train)
+	Yridge_pred = ridge.predict(X_test)
+	r_2=metrics.r2_score(Y_test,Yridge_pred)
+	rmse = (np.sqrt(metrics.mean_squared_error(Y_test, Yridge_pred)))
+	print(f'Ridge\t- RMSE: {rmse:.3f}, R^2: {r_2:.3f}, coef: {ridge.coef_}')
+	
+	# SVR model
+	rbf = svm.SVR(kernel='rbf', C=100, gamma=0.07, epsilon=4.5)
+	rbf.fit(X_train,Y_train)
+	Yrbf_pred = rbf.predict(X_test)
+	r_2=metrics.r2_score(Y_test,Yrbf_pred)
+	rmse = (np.sqrt(metrics.mean_squared_error(Y_test, Yrbf_pred)))
+	print(f'SVR\t- RMSE: {rmse:.3f}, R^2: {r_2:.3f}')
+	
+	# linear model 
+	lin=LinearRegression()
+	lin.fit(X_train,Y_train)
+	Ylin_pred = lin.predict(X_test)
+	rmse = (np.sqrt(metrics.mean_squared_error(Y_test, Ylin_pred)))
+	r_2=metrics.r2_score(Y_test,Ylin_pred)
+	print(f'Linear\t- RMSE: {rmse:.3f}, R^2: {r_2:.3f}, coef: {lin.coef_}')
+</code></pre>
+</article>
 
 						<article class="max work-item">
 							</br><h5>Result and discussion:</h5> 
 						</article>
 
-						<article class="off-3 col-9 col-12-xsmall work-item">
-							<p>Function Execution</p>
-							<a href="assets/pics/functionRun.JPG" target="_blank" class="image fit thumb"><img src="assets/pics/functionRun.JPG" alt=""/></a>
+<article class="col-12 col-12-xsmall work-item">
+<p><b>Example of function call and output:</b></p>	
+<pre><code class="language-python">
+#roughness models with 4 factors
+genModels(dataset[['speed_mph','closeDisk','disk_in','basket']], dataset['roughness'])
+</code>
+Enet	- RMSE: 5.020, R^2: 0.327, coef: [-0.         0.        -0.         1.6860028]
+Lasso	- RMSE: 4.848, R^2: 0.372, coef: [-0.          0.         -0.          2.02900419]
+Ridge	- RMSE: 4.541, R^2: 0.449, coef: [-0.17295786  0.55276735 -0.30955592  3.05233917]
+SVR	- RMSE: 4.659, R^2: 0.420
+Linear	- RMSE: 4.541, R^2: 0.449, coef: [-0.1726292   0.55322843 -0.30974961  3.05416945]
+</pre>
+</article>
+						<article class=" col-12 col-12-xsmall work-item">
 						</br>
-							<p>RMSE and R2 values from regression models for roughness</p>
-							<a href="assets/pics/roughnessTable.JPG" target="_blank" class="image fit thumb"><img src="assets/pics/roughnessTable.JPG" alt=""/></a>
+							<p>RMSE and R2 values from regression models for roughness:</p>
+							<a href="assets/pics/roughnessTable.JPG" target="_blank" class="image top thumb"><img src="assets/pics/roughnessTable.JPG" alt=""/></a>
 						</article>
 
 						<article class="max work-item">
@@ -246,10 +361,11 @@
 								that utilised L1 loss function although a simple linear regression model performed just as well as the Ridge model meaning that any form of regularization is probably unneccesary.     
 							</p></br>
 						</article>
-						
-						<article class="off-3 col-9 col-12-xsmall work-item">
-							<p>RMSE and R2 values from regression models for surface residue</p>
-							<a href="assets/pics/resTable.JPG"  target="_blank" class="image fit thumb"><img src="assets/pics/resTable.JPG" alt=""/></a>
+
+
+						<article class="col-12 col-12-xsmall work-item">
+							<p>RMSE and R2 values from regression models for surface residu:e</p>
+							<a href="assets/pics/resTable.JPG"  target="_blank" class="image top thumb"><img src="assets/pics/resTable.JPG" alt=""/></a>
 						</article>
 
 						<article class="max work-item">
@@ -298,6 +414,6 @@
 			<script src="assets/js/breakpoints.min.js"></script>
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
-
+			<script src="assets/js/prism.js"></script>
 	</body>
 </html>
